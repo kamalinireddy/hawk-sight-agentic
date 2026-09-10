@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hawk Sight India - भारत की सम्पूर्ण आपातकालीन प्रबंधन प्रणाली</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Leaflet.js for Interactive Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Chart.js for Data Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- PWA and Mobile Optimization -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1FB8CD">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="description" content="Advanced technology और real-time intelligence के साथ भारतीय समुदायों की सुरक्षा।">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <div class="logo-icon">🦅</div>
+                <h1 class="logo-text">Hawk Sight India</h1>
+                <p class="logo-tagline">भारत की सम्पूर्ण आपातकालीन प्रबंधन प्रणाली</p>
+            </div>
+            <div class="loading-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Initializing Emergency Systems...</div>
+            </div>
+            <div class="loading-footer">
+                <div class="govt-seal">🇮🇳</div>
+                <p>Government of India | NDMA Approved</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Floating SOS Button -->
+    <button class="emergency-sos-btn" id="emergencySOSBtn" aria-label="Emergency SOS">
+        <div class="sos-pulse-ring"></div>
+        <div class="sos-pulse-ring"></div>
+        <div class="sos-content">
+            <span class="sos-icon">🚨</span>
+            <span class="sos-text">SOS</span>
+        </div>
+    </button>
+
+    <!-- SOS Countdown Modal -->
+    <div class="modal hidden" id="sosModal" role="dialog" aria-labelledby="sosTitle">
+        <div class="modal__overlay">
+            <div class="modal__content sos-modal">
+                <div class="sos-header">
+                    <div class="sos-icon-large">🚨</div>
+                    <h2 id="sosTitle">EMERGENCY SOS ACTIVATED</h2>
+                    <p>SMS will be sent to <strong>+91 7204805507</strong> in:</p>
+                </div>
+                <div class="countdown-display">
+                    <div class="countdown-circle">
+                        <svg class="countdown-svg" viewBox="0 0 100 100">
+                            <circle class="countdown-bg" cx="50" cy="50" r="45"></circle>
+                            <circle class="countdown-progress" id="countdownProgress" cx="50" cy="50" r="45"></circle>
+                        </svg>
+                        <div class="countdown-number" id="countdownNumber">10</div>
+                    </div>
+                </div>
+                <div class="sos-actions">
+                    <button class="btn btn--secondary btn--lg" id="cancelSOS">Cancel</button>
+                    <button class="btn btn--error btn--lg" id="sendSOSNow">Send Now</button>
+                </div>
+                <div class="sos-info">
+                    <p>📍 GPS Location: <span id="currentLocation">Getting location...</span></p>
+                    <p>📱 Emergency contacts will be notified</p>
+                    <p>🚁 NDRF teams will be alerted</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal hidden" id="successModal" role="dialog">
+        <div class="modal__overlay">
+            <div class="modal__content success-modal">
+                <div class="success-animation">
+                    <div class="success-icon">✅</div>
+                    <div class="success-checkmark">
+                        <svg viewBox="0 0 52 52">
+                            <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                            <path class="checkmark-check" fill="none" d="M14,27 L22.5,35.5 L38.5,19.5"/>
+                        </svg>
+                    </div>
+                </div>
+                <h2>Emergency Alert Sent Successfully!</h2>
+                <div class="message-details">
+                    <h3>Message Sent to: +91 7204805507</h3>
+                    <div class="message-preview" id="messagePreview"></div>
+                </div>
+                <div class="next-steps">
+                    <h4>Emergency Response Activated:</h4>
+                    <ul>
+                        <li>🚨 Local emergency services notified</li>
+                        <li>📍 Your location has been shared</li>
+                        <li>👨‍👩‍👧‍👦 Family members will be contacted</li>
+                        <li>🚁 NDRF teams are being alerted</li>
+                        <li>⏰ Help is on the way</li>
+                    </ul>
+                </div>
+                <button class="btn btn--primary btn--lg" id="closeSuccess">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar" role="navigation">
+        <div class="sidebar__header">
+            <div class="sidebar__logo">
+                <span class="logo-icon">🦅</span>
+                <div class="logo-text">
+                    <div class="logo-main">Hawk Sight</div>
+                    <div class="logo-sub">भारत</div>
+                </div>
+            </div>
+            <button class="sidebar__toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        
+        <nav class="sidebar__nav">
+            <ul class="nav-menu" role="menubar">
+                <li class="nav-item" role="none">
+                    <a href="#dashboard" class="nav-link active" data-section="dashboard" role="menuitem">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">Dashboard</span>
+                        <span class="nav-badge live">Live</span>
+                    </a>
+                </li>
+                <li class="nav-item" role="none">
+                    <a href="#alerts" class="nav-link" data-section="alerts" role="menuitem">
+                        <span class="nav-icon">🚨</span>
+                        <span class="nav-text">Alert Center</span>
+                        <span class="nav-count" id="alertCount">12</span>
+                    </a>
+                </li>
+                <li class="nav-item" role="none">
+                    <a href="#family" class="nav-link" data-section="family" role="menuitem">
+                        <span class="nav-icon">👨‍👩‍👧‍👦</span>
+                        <span class="nav-text">Family Safety</span>
+                    </a>
+                </li>
+                <li class="nav-item" role="none">
+                    <a href="#mapping" class="nav-link" data-section="mapping" role="menuitem">
+                        <span class="nav-icon">🗺️</span>
+                        <span class="nav-text">Live Map</span>
+                    </a>
+                </li>
+                <li class="nav-item" role="none">
+                    <a href="#preparedness" class="nav-link" data-section="preparedness" role="menuitem">
+                        <span class="nav-icon">🛡️</span>
+                        <span class="nav-text">Preparedness</span>
+                        <span class="nav-progress" id="prepProgress">67%</span>
+                    </a>
+                </li>
+                <li class="nav-item" role="none">
+                    <a href="#resources" class="nav-link" data-section="resources" role="menuitem">
+                        <span class="nav-icon">📦</span>
+                        <span class="nav-text">Resources</span>
+                    </a>
+                </li>
+                <li class="nav-item" role="none">
+                    <a href="#ndrf" class="nav-link" data-section="ndrf" role="menuitem">
+                        <span class="nav-icon">🚁</span>
+                        <span class="nav-text">NDRF Center</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="sidebar__footer">
+            <div class="emergency-contacts">
+                <h4>Quick Contacts</h4>
+                <div class="emergency-grid">
+                    <button class="emergency-btn" onclick="makeCall('112')" data-number="112">
+                        <span class="number">112</span>
+                        <span class="label">Unified Emergency</span>
+                    </button>
+                    <button class="emergency-btn" onclick="makeCall('100')" data-number="100">
+                        <span class="number">100</span>
+                        <span class="label">Police</span>
+                    </button>
+                    <button class="emergency-btn" onclick="makeCall('101')" data-number="101">
+                        <span class="number">101</span>
+                        <span class="label">Fire</span>
+                    </button>
+                    <button class="emergency-btn" onclick="makeCall('102')" data-number="102">
+                        <span class="number">102</span>
+                        <span class="label">Ambulance</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="sidebar__controls">
+                <button class="control-btn theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
+                    <span class="control-icon">🌙</span>
+                </button>
+                <button class="control-btn lang-toggle" id="langToggle" title="Change Language">
+                    <span class="control-text">हि</span>
+                </button>
+                <button class="control-btn location-toggle" id="locationToggle" title="Update Location">
+                    <span class="control-icon">📍</span>
+                </button>
+            </div>
+            
+            <div class="connection-status" id="connectionStatus">
+                <div class="status-indicator">
+                    <span class="status-dot online" id="statusDot"></span>
+                    <span class="status-text" id="statusText">Connected to NDMA</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent">
+        <!-- Top Header Bar -->
+        <header class="header-bar">
+            <div class="header-left">
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <div class="page-info">
+                    <h1 class="page-title" id="pageTitle">Emergency Dashboard</h1>
+                    <div class="live-updates" id="liveUpdates">
+                        <div class="update-ticker">
+                            <span class="update-item">🌧️ Heavy rain alert - Mumbai</span>
+                            <span class="update-item">🌍 Earthquake 4.2M - Uttarakhand</span>
+                            <span class="update-item">🚁 NDRF deployed - Chennai</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="weather-info" id="weatherInfo">
+                    <div class="weather-icon">🌧️</div>
+                    <div class="weather-details">
+                        <div class="weather-temp">32°C</div>
+                        <div class="weather-condition">Heavy Rain</div>
+                    </div>
+                    <div class="weather-alert orange">Orange Alert</div>
+                </div>
+                <button class="notification-btn" id="notificationBtn" aria-label="Notifications">
+                    <span class="notification-icon">🔔</span>
+                    <span class="notification-badge" id="notificationBadge">3</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section class="content-section active" id="dashboard">
+            <div class="dashboard-container">
+                <!-- Critical Stats Overview -->
+                <div class="stats-overview">
+                    <div class="stat-card critical" data-stat="incidents">
+                        <div class="stat-icon">🚨</div>
+                        <div class="stat-content">
+                            <div class="stat-number" data-target="12">0</div>
+                            <div class="stat-label">Active Incidents</div>
+                            <div class="stat-trend up">↑ 2 from last hour</div>
+                        </div>
+                    </div>
+                    <div class="stat-card warning" data-stat="affected">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <div class="stat-number" data-target="4567">0</div>
+                            <div class="stat-label">People Affected</div>
+                            <div class="stat-trend">Safe evacuation in progress</div>
+                        </div>
+                    </div>
+                    <div class="stat-card success" data-stat="shelters">
+                        <div class="stat-icon">⛺</div>
+                        <div class="stat-content">
+                            <div class="stat-number" data-target="23">0</div>
+                            <div class="stat-label">Relief Camps</div>
+                            <div class="stat-trend">✅ Fully operational</div>
+                        </div>
+                    </div>
+                    <div class="stat-card info" data-stat="ndrf">
+                        <div class="stat-icon">🚁</div>
+                        <div class="stat-content">
+                            <div class="stat-number" data-target="8">0</div>
+                            <div class="stat-label">NDRF Teams</div>
+                            <div class="stat-trend">🚀 Ready for deployment</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Dashboard Grid -->
+                <div class="dashboard-grid">
+                    <!-- Interactive India Map -->
+                    <div class="widget map-widget" id="mapWidget">
+                        <div class="widget-header">
+                            <h3>🇮🇳 Live India Emergency Map</h3>
+                            <div class="map-controls">
+                                <button class="map-btn" id="mapFullscreen" title="Fullscreen">⛶</button>
+                                <button class="map-btn" id="mapLayers" title="Toggle Layers">🗂️</button>
+                                <button class="map-btn" id="mapRefresh" title="Refresh">🔄</button>
+                            </div>
+                        </div>
+                        <div class="map-container" id="indiaMap" style="height: 400px; position: relative;"></div>
+                        <div class="map-legend">
+                            <div class="legend-item">
+                                <div class="legend-marker flood"></div>
+                                <span>Floods</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-marker earthquake"></div>
+                                <span>Earthquakes</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-marker cyclone"></div>
+                                <span>Cyclones</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-marker fire"></div>
+                                <span>Fire</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Risk Assessment -->
+                    <div class="widget risk-widget">
+                        <div class="widget-header">
+                            <h3>🤖 AI Risk Assessment</h3>
+                            <span class="risk-indicator orange">Orange Alert</span>
+                        </div>
+                        <div class="risk-content">
+                            <div class="risk-gauge-container">
+                                <canvas id="riskGauge" width="200" height="120"></canvas>
+                                <div class="risk-value">Moderate-High</div>
+                            </div>
+                            <div class="risk-factors">
+                                <div class="factor-item">
+                                    <span class="factor-name">Monsoon Activity</span>
+                                    <div class="factor-progress">
+                                        <div class="factor-bar" style="width: 78%"></div>
+                                    </div>
+                                    <span class="factor-value">78%</span>
+                                </div>
+                                <div class="factor-item">
+                                    <span class="factor-name">Seismic Activity</span>
+                                    <div class="factor-progress">
+                                        <div class="factor-bar" style="width: 45%"></div>
+                                    </div>
+                                    <span class="factor-value">45%</span>
+                                </div>
+                                <div class="factor-item">
+                                    <span class="factor-name">Population Density</span>
+                                    <div class="factor-progress">
+                                        <div class="factor-bar" style="width: 90%"></div>
+                                    </div>
+                                    <span class="factor-value">90%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Real-time Alerts Feed -->
+                    <div class="widget alerts-widget">
+                        <div class="widget-header">
+                            <h3>⚡ Live Alerts Feed</h3>
+                            <div class="alert-filters">
+                                <button class="filter-btn active" data-filter="all">All</button>
+                                <button class="filter-btn" data-filter="critical">Critical</button>
+                                <button class="filter-btn" data-filter="weather">Weather</button>
+                            </div>
+                        </div>
+                        <div class="alerts-feed" id="alertsFeed">
+                            <div class="alert-item critical" data-type="weather">
+                                <div class="alert-icon">🌊</div>
+                                <div class="alert-content">
+                                    <div class="alert-title">Heavy Rain Alert - Mumbai</div>
+                                    <div class="alert-message">IMD warns of heavy rainfall causing waterlogging in low-lying areas</div>
+                                    <div class="alert-meta">
+                                        <span class="alert-time">2 min ago</span>
+                                        <span class="alert-location">Mumbai, Thane, Navi Mumbai</span>
+                                    </div>
+                                </div>
+                                <button class="alert-action-btn" onclick="viewAlertDetails('weather-mumbai')">View</button>
+                            </div>
+                            <div class="alert-item warning" data-type="earthquake">
+                                <div class="alert-icon">🌍</div>
+                                <div class="alert-content">
+                                    <div class="alert-title">Earthquake - Uttarakhand</div>
+                                    <div class="alert-message">4.2 magnitude earthquake recorded in Chamoli district</div>
+                                    <div class="alert-meta">
+                                        <span class="alert-time">15 min ago</span>
+                                        <span class="alert-location">Chamoli, Rudraprayag</span>
+                                    </div>
+                                </div>
+                                <button class="alert-action-btn" onclick="viewAlertDetails('earthquake-uttarakhand')">View</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NDRF Operations -->
+                    <div class="widget ndrf-widget">
+                        <div class="widget-header">
+                            <h3>🚁 NDRF Operations Command</h3>
+                            <div class="ndrf-status active">24/7 Active</div>
+                        </div>
+                        <div class="ndrf-content">
+                            <div class="ndrf-teams">
+                                <div class="team-card deployed">
+                                    <div class="team-icon">🚁</div>
+                                    <div class="team-info">
+                                        <div class="team-name">Alpha Team - Mumbai</div>
+                                        <div class="team-status">Deployed</div>
+                                        <div class="team-personnel">45 Personnel</div>
+                                    </div>
+                                    <button class="team-contact-btn" onclick="contactNDRFTeam('alpha')">Contact</button>
+                                </div>
+                                <div class="team-card enroute">
+                                    <div class="team-icon">🚤</div>
+                                    <div class="team-info">
+                                        <div class="team-name">Bravo Team - Uttarakhand</div>
+                                        <div class="team-status">En Route</div>
+                                        <div class="team-personnel">38 Personnel</div>
+                                    </div>
+                                    <button class="team-contact-btn" onclick="contactNDRFTeam('bravo')">Contact</button>
+                                </div>
+                                <div class="team-card standby">
+                                    <div class="team-icon">🚚</div>
+                                    <div class="team-info">
+                                        <div class="team-name">Charlie Team - Chennai</div>
+                                        <div class="team-status">Standby</div>
+                                        <div class="team-personnel">52 Personnel</div>
+                                    </div>
+                                    <button class="team-contact-btn" onclick="contactNDRFTeam('charlie')">Contact</button>
+                                </div>
+                            </div>
+                            <div class="ndrf-actions">
+                                <button class="btn btn--primary btn--full-width" onclick="makeCall('9711077372')">
+                                    📞 NDRF Helpline: 9711077372
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions Panel -->
+                    <div class="widget actions-widget">
+                        <div class="widget-header">
+                            <h3>⚡ Quick Emergency Actions</h3>
+                        </div>
+                        <div class="quick-actions-grid">
+                            <button class="action-btn emergency" data-action="sos">
+                                <div class="action-glow"></div>
+                                <div class="action-icon">🆘</div>
+                                <div class="action-text">Emergency SOS</div>
+                            </button>
+                            <button class="action-btn primary" data-action="family-checkin">
+                                <div class="action-icon">✅</div>
+                                <div class="action-text">Family Check-in</div>
+                            </button>
+                            <button class="action-btn secondary" data-action="report-incident">
+                                <div class="action-icon">📝</div>
+                                <div class="action-text">Report Incident</div>
+                            </button>
+                            <button class="action-btn info" data-action="find-shelter">
+                                <div class="action-icon">🏠</div>
+                                <div class="action-text">Find Shelter</div>
+                            </button>
+                            <button class="action-btn warning" data-action="medical-help">
+                                <div class="action-icon">🏥</div>
+                                <div class="action-text">Medical Help</div>
+                            </button>
+                            <button class="action-btn success" data-action="volunteer">
+                                <div class="action-icon">🤝</div>
+                                <div class="action-text">Volunteer</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Emergency Services Nearby -->
+                    <div class="widget services-widget">
+                        <div class="widget-header">
+                            <h3>🚨 Nearby Emergency Services</h3>
+                            <button class="location-update-btn" id="updateLocationBtn">📍 Update Location</button>
+                        </div>
+                        <div class="services-list" id="servicesList">
+                            <div class="service-item hospital">
+                                <div class="service-icon">🏥</div>
+                                <div class="service-info">
+                                    <div class="service-name">AIIMS Emergency</div>
+                                    <div class="service-distance">2.3 km away</div>
+                                    <div class="service-availability available">Available</div>
+                                </div>
+                                <div class="service-actions">
+                                    <button class="service-call-btn" onclick="makeCall('01126588500')">Call</button>
+                                    <button class="service-direction-btn" onclick="getDirections('AIIMS')">Directions</button>
+                                </div>
+                            </div>
+                            <div class="service-item fire">
+                                <div class="service-icon">🚒</div>
+                                <div class="service-info">
+                                    <div class="service-name">Delhi Fire Service</div>
+                                    <div class="service-distance">1.8 km away</div>
+                                    <div class="service-availability active">Active</div>
+                                </div>
+                                <div class="service-actions">
+                                    <button class="service-call-btn" onclick="makeCall('101')">Call</button>
+                                    <button class="service-direction-btn" onclick="getDirections('FireStation')">Directions</button>
+                                </div>
+                            </div>
+                            <div class="service-item police">
+                                <div class="service-icon">🚔</div>
+                                <div class="service-info">
+                                    <div class="service-name">Delhi Police Control</div>
+                                    <div class="service-distance">1.2 km away</div>
+                                    <div class="service-availability active">24x7 Active</div>
+                                </div>
+                                <div class="service-actions">
+                                    <button class="service-call-btn" onclick="makeCall('100')">Call</button>
+                                    <button class="service-direction-btn" onclick="getDirections('Police')">Directions</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alert Center Section -->
+        <section class="content-section" id="alerts">
+            <div class="alerts-container">
+                <div class="section-header">
+                    <h2>🚨 National Alert Center</h2>
+                    <div class="alert-stats">
+                        <div class="alert-stat critical">
+                            <span class="stat-number">12</span>
+                            <span class="stat-label">Critical</span>
+                        </div>
+                        <div class="alert-stat warning">
+                            <span class="stat-number">25</span>
+                            <span class="stat-label">Warnings</span>
+                        </div>
+                        <div class="alert-stat info">
+                            <span class="stat-number">8</span>
+                            <span class="stat-label">Advisories</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="disaster-monitoring">
+                    <div class="disaster-type-cards">
+                        <div class="disaster-card active" data-disaster="flood">
+                            <div class="disaster-icon">🌊</div>
+                            <div class="disaster-name">Monsoon Floods</div>
+                            <div class="disaster-season">June - September</div>
+                            <div class="disaster-states">Kerala, Assam, Bihar, UP</div>
+                            <div class="disaster-status active">12 Active</div>
+                        </div>
+                        <div class="disaster-card" data-disaster="cyclone">
+                            <div class="disaster-icon">🌪️</div>
+                            <div class="disaster-name">Tropical Cyclones</div>
+                            <div class="disaster-season">April - December</div>
+                            <div class="disaster-states">Odisha, AP, TN, WB</div>
+                            <div class="disaster-status monitoring">3 Monitoring</div>
+                        </div>
+                        <div class="disaster-card" data-disaster="earthquake">
+                            <div class="disaster-icon">🌍</div>
+                            <div class="disaster-name">Earthquakes</div>
+                            <div class="disaster-season">Year-round</div>
+                            <div class="disaster-states">J&K, HP, Uttarakhand</div>
+                            <div class="disaster-status warning">5 Recent</div>
+                        </div>
+                        <div class="disaster-card" data-disaster="heatwave">
+                            <div class="disaster-icon">🌡️</div>
+                            <div class="disaster-name">Heat Waves</div>
+                            <div class="disaster-season">March - June</div>
+                            <div class="disaster-states">Rajasthan, MP, UP</div>
+                            <div class="disaster-status normal">0 Active</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Family Safety Section -->
+        <section class="content-section" id="family">
+            <div class="family-container">
+                <div class="section-header">
+                    <h2>👨‍👩‍👧‍👦 Family Safety Network</h2>
+                    <button class="btn btn--primary" id="addFamilyMember">+ Add Member</button>
+                </div>
+                <div class="family-dashboard">
+                    <div class="family-members-list" id="familyMembersList">
+                        <div class="member-card safe">
+                            <div class="member-avatar">👨</div>
+                            <div class="member-info">
+                                <div class="member-name">राज शर्मा</div>
+                                <div class="member-relation">Self</div>
+                                <div class="member-status">✅ Safe - Home</div>
+                                <div class="member-location">📍 New Delhi</div>
+                                <div class="member-checkin">Last check-in: 10 min ago</div>
+                            </div>
+                            <div class="member-actions">
+                                <button class="member-call-btn" onclick="makeCall('+919876543210')">📞</button>
+                                <button class="member-checkin-btn" onclick="requestCheckIn('raj')">✅</button>
+                                <button class="member-locate-btn" onclick="locateMember('raj')">📍</button>
+                            </div>
+                        </div>
+                        <div class="member-card safe">
+                            <div class="member-avatar">👩</div>
+                            <div class="member-info">
+                                <div class="member-name">प्रिया शर्मा</div>
+                                <div class="member-relation">Spouse</div>
+                                <div class="member-status">✅ Safe - Office</div>
+                                <div class="member-location">📍 Connaught Place</div>
+                                <div class="member-checkin">Last check-in: 25 min ago</div>
+                            </div>
+                            <div class="member-actions">
+                                <button class="member-call-btn" onclick="makeCall('+919876543211')">📞</button>
+                                <button class="member-checkin-btn" onclick="requestCheckIn('priya')">✅</button>
+                                <button class="member-locate-btn" onclick="locateMember('priya')">📍</button>
+                            </div>
+                        </div>
+                        <div class="member-card safe">
+                            <div class="member-avatar">👧</div>
+                            <div class="member-info">
+                                <div class="member-name">आर्य शर्मा</div>
+                                <div class="member-relation">Daughter</div>
+                                <div class="member-status">✅ Safe - School</div>
+                                <div class="member-location">📍 Modern School</div>
+                                <div class="member-checkin">Last check-in: 1 hour ago</div>
+                            </div>
+                            <div class="member-actions">
+                                <button class="member-call-btn" onclick="makeCall('+919876543212')">📞</button>
+                                <button class="member-checkin-btn" onclick="requestCheckIn('arya')">✅</button>
+                                <button class="member-locate-btn" onclick="locateMember('arya')">📍</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Mapping Section -->
+        <section class="content-section" id="mapping">
+            <div class="mapping-container">
+                <div class="section-header">
+                    <h2>🗺️ Interactive Emergency Mapping</h2>
+                    <div class="map-toolbar">
+                        <div class="map-layers-control">
+                            <button class="layer-btn active" data-layer="disasters" title="Disasters">🌊</button>
+                            <button class="layer-btn" data-layer="services" title="Emergency Services">🚨</button>
+                            <button class="layer-btn" data-layer="shelters" title="Shelters">🏠</button>
+                            <button class="layer-btn" data-layer="traffic" title="Traffic">🚦</button>
+                        </div>
+                        <div class="map-tools">
+                            <button class="tool-btn" id="drawRoute" title="Draw Evacuation Route">✏️</button>
+                            <button class="tool-btn" id="measureDistance" title="Measure Distance">📏</button>
+                            <button class="tool-btn" id="addMarker" title="Add Custom Marker">📍</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="full-map-container">
+                    <div id="fullscreenMap" style="height: 600px; position: relative;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Preparedness Section -->
+        <section class="content-section" id="preparedness">
+            <div class="preparedness-container">
+                <div class="section-header">
+                    <h2>🛡️ Emergency Preparedness Center</h2>
+                    <div class="preparedness-score">
+                        <div class="score-circle">
+                            <div class="score-value">67%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="preparedness-content" id="preparednessContent">
+                    <!-- Preparedness content will be dynamically loaded -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Resources Section -->
+        <section class="content-section" id="resources">
+            <div class="resources-container">
+                <div class="section-header">
+                    <h2>📦 Emergency Resources Hub</h2>
+                </div>
+                <div class="resources-content" id="resourcesContent">
+                    <!-- Resources content will be dynamically loaded -->
+                </div>
+            </div>
+        </section>
+
+        <!-- NDRF Command Center Section -->
+        <section class="content-section" id="ndrf">
+            <div class="ndrf-container">
+                <div class="section-header">
+                    <h2>🚁 NDRF Command Center</h2>
+                    <div class="ndrf-badge">
+                        <div class="badge-icon">🇮🇳</div>
+                        <div class="badge-text">Government of India</div>
+                    </div>
+                </div>
+                <div class="ndrf-dashboard">
+                    <div class="ndrf-hero">
+                        <div class="ndrf-mission">
+                            <h3>National Disaster Response Force</h3>
+                            <p>Specialized force for disaster response, rescue operations, and emergency management across India</p>
+                        </div>
+                        <div class="ndrf-contact-card">
+                            <h4>24x7 NDRF Helpline</h4>
+                            <div class="helpline-number">9711077372</div>
+                            <button class="btn btn--primary btn--lg" onclick="makeCall('9711077372')">
+                                📞 Call NDRF Now
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ndrf-operations">
+                        <div class="operation-stats">
+                            <div class="op-stat">
+                                <div class="op-number">15</div>
+                                <div class="op-label">Active Operations</div>
+                            </div>
+                            <div class="op-stat">
+                                <div class="op-number">45</div>
+                                <div class="op-label">Teams Deployed</div>
+                            </div>
+                            <div class="op-stat">
+                                <div class="op-number">2,341</div>
+                                <div class="op-label">Lives Saved Today</div>
+                            </div>
+                            <div class="op-stat">
+                                <div class="op-number">98%</div>
+                                <div class="op-label">Success Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Offline Notification -->
+    <div class="offline-notification hidden" id="offlineNotification">
+        <div class="offline-content">
+            <span class="offline-icon">📵</span>
+            <span class="offline-text">You're offline. Some features may be limited.</span>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- AI Agent Widget -->
+    <button class="ai-agent-btn" id="aiAgentBtn" aria-label="AI Assistant">🤖</button>
+    <div class="ai-agent-panel hidden" id="aiAgentPanel">
+        <div class="ai-agent-header">
+            <span>🦅 Hawk Sight Assistant</span>
+            <button id="aiAgentClose">✕</button>
+        </div>
+        <div class="ai-agent-messages" id="aiAgentMessages">
+            <div class="ai-msg bot">Namaste! I'm your Hawk Sight assistant. I can check alerts, navigate the dashboard, call emergency numbers, or trigger SOS for you. How can I help?</div>
+        </div>
+        <div class="ai-agent-input-row">
+            <input type="text" id="aiAgentInput" placeholder="Ask me anything or say what you need...">
+            <button id="aiAgentSend">➤</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

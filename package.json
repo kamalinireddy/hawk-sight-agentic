@@ -1,0 +1,13 @@
+{
+  "name": "hawk-sight-agentic",
+  "version": "1.0.0",
+  "description": "Hawk Sight India dashboard with an agentic AI assistant powered by Claude",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "dotenv": "^16.4.5"
+  }
+}
